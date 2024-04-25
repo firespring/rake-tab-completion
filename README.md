@@ -40,7 +40,7 @@ Interrupted execution: Test what happens if the script execution is interrupted,
 
 # Other
 ## How do we handle local development of the dev commands library?
-Do we care?
+* Do we care?
 ## Where does this live?
 ### fdp-devops
 * This feels single use and is not what this is intended for. We could have it live here and another location.
@@ -53,4 +53,4 @@ Do we care?
   * I would like a discussion on this one as I could see it being a route. 
   * Injecting this logic with the rake commands makes the setup trivial.
 ### rake-tab-completion
-* Sharable and independent 
+* Sharable and independent. 
