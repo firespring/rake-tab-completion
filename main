@@ -1,0 +1,74 @@
+# ----------------------
+# Rake Tab Completion
+# ----------------------
+
+# Validates the user's terminal is capable of running the script.
+function validate_terminal_session() {
+  # Check if 'rake' command is available
+  if ! command -v rake &>/dev/null; then
+    echo "Error: 'rake' command not found. Make sure rake is installed and available in the PATH."
+    return 1
+  fi
+
+  # Check if 'md5sum' command is available
+  if ! command -v md5sum &>/dev/null; then
+    echo "Error: 'md5sum' command not found. Make sure md5sum is installed and available in the PATH."
+    return 1
+  fi
+  return 0;
+}
+
+# Finds the nearest Rakefile. In or above, not lateral or down.
+function _rake_cache_path() {
+  local current_dir="$PWD"
+
+  # Search for Rakefile in the current directory and its parent directories.
+  while [ "$current_dir" != "/" ]; do
+    if [ -e "$current_dir/Rakefile" ]; then
+      echo "${current_dir}"
+      return 0
+    fi
+    current_dir="$(dirname "$current_dir")"
+  done
+
+  echo "No Rakefile found"
+  return 1
+}
+
+# Runs a silent rake task list and stores the output in a cache file.
+function rake_task_cache_store() {
+  rake --tasks --silent > "$(_rake_cache_path)/.rake_t_cache"
+}
+
+# Runs a md5sum on the target Gemfile, Rakefile, and any extra rake filees in a rakelib directory. These values are stored adjacent to the rake tasks cache file. 
+function rake_md5_cache_store() {
+  md5sum $(_rake_cache_path)/{Gemfile,Rakefile} $(find $(_rake_cache_path)/rakelib -type f 2>/dev/null) > "$(_rake_cache_path)/.rake_md5_cache"
+}
+
+# Validates md5sums. On failure, regenerate the task and md5 cache files.
+function validate_cache() {
+  md5sum --check "$(_rake_cache_path)/.rake_md5_cache" --status 2>/dev/null || rake_task_cache_store && rake_md5_cache_store
+}
+
+# Modify the tab completion behavior.
+export COMP_WORDBREAKS=${COMP_WORDBREAKS/\:/}
+
+# Main tab completion modification function.
+function _rakecomplete() {
+  # Build cache if missing.
+  if [ ! -e "$(_rake_cache_path)/.rake_t_cache" ]; then
+    validate_terminal_session
+    rake_task_cache_store
+  fi
+
+  # Validate/ Build cache files. 
+  validate_cache
+
+  local tasks=$(awk '{print $2}' "$(_rake_cache_path)/.rake_t_cache")
+  COMPREPLY=($(compgen -W "${tasks}" -- "${COMP_WORDS[COMP_CWORD]}"))
+  return 0
+}
+
+complete -o default -o nospace -F _rakecomplete rake
+
+
