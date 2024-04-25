@@ -1,5 +1,7 @@
-# Setup
+# Rake Tab Completion
+Integrating this will allow for tab completion of rake commands.
 
+# Setup
 ## Add source target to your bash profile
 ```
 source ~/path/to/file
@@ -39,3 +41,16 @@ Interrupted execution: Test what happens if the script execution is interrupted,
 # Other
 ## How do we handle local development of the dev commands library?
 Do we care?
+## Where does this live?
+### fdp-devops
+* This feels single use and is not what this is intended for. We could have it live here and another location.
+### engineering-devops
+* This feels better given the tool would be managed by devops. 
+* Doesn't look like SBF has access.
+  * Intended?
+### dev_commands
+* This directly enhances these commands, but adding a shell script with the ruby logic just feels odd.
+  * I would like a discussion on this one as I could see it being a route. 
+  * Injecting this logic with the rake commands makes the setup trivial.
+### rake-tab-completion
+* Sharable and independent 
