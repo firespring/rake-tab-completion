@@ -6,6 +6,10 @@ Integrating this will allow for tab completion of rake commands.
 ```
 source ~/path/to/file
 ```
+## Update Profile
+```
+source ~/path/to/.bash_profile
+```
 ## Add Global .gitignore for cache files.
 This step may require additional configuration steps and location may vary by device.
 * Open ~/.config/git/ignore
