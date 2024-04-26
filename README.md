@@ -3,6 +3,10 @@ Integrating this will allow for tab completion of rake commands.
 
 # Setup
 ## Add source target to your bash profile
+* Use main for base functionality.
+* Use time_main for time analysis wrapped functions.
+    * MacOS users should validate installation of coreutils for gdate
+        * The boiler plate date command does not go beyond seconds like GNU versions.  
 ```
 source ~/path/to/file
 ```
