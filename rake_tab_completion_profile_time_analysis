@@ -1,4 +1,23 @@
 # ----------------------
+# Time Analysis
+# ----------------------
+# Function to measure the runtime of another function in microseconds
+measure_runtime() {
+    local start_time end_time elapsed_time
+    # Start measuring time
+    # Note: MacOS date does not measure beyoned seconds, install gdate via coreutils with brew. 
+    start_time=$([ "$(uname)" = "Darwin" ] && gdate +%s.%3N || date +%s.%3N)
+    # Execute the provided function or command
+    "$@"
+    
+    # Calculate the elapsed time
+    end_time=$([ "$(uname)" = "Darwin" ] && gdate +%s.%3N || date +%s.%3N)
+    elapsed_time=$(echo "scale=63; $end_time - $start_time" | bc)
+    # Print the elapsed time
+    printf "\nElapsed time: %.6f seconds, for: %s\n" "$elapsed_time" "$1"
+}
+
+# ----------------------
 # Rake Tab Completion
 # ----------------------
 
@@ -15,6 +34,19 @@ function validate_terminal_session() {
         echo "Error: 'md5sum' command not found. Make sure md5sum is installed and available in the PATH."
         return 1
     fi
+
+    # Check 'date/gdate' command is available
+    if "$(uname)" = "Darwin"; then
+        if ! command -v gdate &>/dev/null; then
+            echo "Error: 'gdate' command not found. Make sure gdate is installed and available in the PATH."
+            return 1
+        fi
+    else
+        if ! command -v date &>/dev/null; then
+            echo "Error: 'date' command not found. Make sure date is installed and available in the PATH."
+            return 1
+        fi
+    fi
     return 0;
 }
 
@@ -22,7 +54,7 @@ function validate_terminal_session() {
 function _rake_cache_path() {
     local current_dir="$PWD"
 
-    # Search for Rakefile in the current directory and its parent directories.
+     # Search for Rakefile in the current directory and its parent directories.
     while [ "$current_dir" != "/" ]; do
         if [ -e "$current_dir/Rakefile" ]; then
             echo "${current_dir}"
@@ -47,7 +79,14 @@ function rake_md5_cache_store() {
 
 # Validates md5sums. On failure, regenerate the task and md5 cache files.
 function validate_cache() {
-    md5sum --check "$(_rake_cache_path)/.rake_md5_cache" --status 2>/dev/null || rake_task_cache_store && rake_md5_cache_store
+    measure_runtime validate_terminal_session
+    # Build cache if missing.
+    if [ ! -e "$(_rake_cache_path)/.rake_t_cache" ]; then
+        measure_runtime rake_task_cache_store
+        measure_runtime rake_md5_cache_store
+    else
+        md5sum --check "$(_rake_cache_path)/.rake_md5_cache" --status 2>/dev/null || rake_task_cache_store && rake_md5_cache_store
+    fi
 }
 
 # Modify the tab completion behavior.
@@ -55,20 +94,13 @@ export COMP_WORDBREAKS=${COMP_WORDBREAKS/\:/}
 
 # Main tab completion modification function.
 function _rakecomplete() {
-    # Build cache if missing.
-    if [ ! -e "$(_rake_cache_path)/.rake_t_cache" ]; then
-        validate_terminal_session
-        rake_task_cache_store
-    fi
-
     # Validate/ Build cache files. 
-    validate_cache
-
+    measure_runtime validate_cache
+    
     local tasks=$(awk '{print $2}' "$(_rake_cache_path)/.rake_t_cache")
     COMPREPLY=($(compgen -W "${tasks}" -- "${COMP_WORDS[COMP_CWORD]}"))
     return 0
 }
 
 complete -o default -o nospace -F _rakecomplete rake
-
 
