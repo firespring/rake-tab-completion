@@ -47,17 +47,6 @@ function rake_md5_cache_store() {
 
 # Validates md5sums. On failure, regenerate the task and md5 cache files.
 function validate_cache() {
-    # Build cache if missing.
-    if [ ! -e "$(_rake_cache_path)/.rake_t_cache" ]; then
-        validate_terminal_session
-        rake_task_cache_store && rake_md5_cache_store
-    else
-        md5sum --check "$(_rake_cache_path)/.rake_md5_cache" --status 2>/dev/null || rake_task_cache_store && rake_md5_cache_store
-    fi
-}
-
-# Validates md5sums. On failure, regenerate the task and md5 cache files.
-function validate_cache() {
     validate_terminal_session
     # Build cache if missing.
     if [ ! -e "$(_rake_cache_path)/.rake_t_cache" ]; then
